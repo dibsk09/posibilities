@@ -1,22 +1,33 @@
+
 import streamlit as st
-import re
 import math
 
-# 🌐 페이지 설정
+# 페이지 설정
 st.set_page_config(
     page_title="경우의 수 계산기",
     page_icon="🔢",
     layout="centered"
 )
 
-# 💎 로비 제목
+# 제목
 st.title("🔢 경우의 수 계산기")
-st.markdown("자연어 문장을 입력하면 경우의 수를 계산해 드립니다! 🧠")
+st.markdown("선택 조건에 따라 경우의 수를 계산해 드립니다! 🧠")
 
-# 📥 입력 창
-user_input = st.text_input("예: 5명 중 3명을 순서 없이 뽑는 경우의 수는?")
+# --- 사용자 입력 섹션 ---
+st.markdown("### 📥 조건을 선택하세요:")
 
-# 👉 수학 함수들
+n = st.number_input("전체 항목 수 (n)", min_value=1, step=1)
+r = st.number_input("선택할 항목 수 (r)", min_value=1, step=1)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    duplication = st.selectbox("중복 선택", ["불가능", "가능"])
+
+with col2:
+    order = st.selectbox("순서 고려", ["고려하지 않음", "고려함"])
+
+# 계산 함수들
 def permutation(n, r):
     return math.factorial(n) // math.factorial(n - r)
 
@@ -26,36 +37,38 @@ def combination(n, r):
 def repetition_combination(n, r):
     return combination(n + r - 1, r)
 
-# 🧠 자연어 해석 함수
-def parse_case(text):
-    # 숫자 추출
-    nums = list(map(int, re.findall(r'\d+', text)))
-    if len(nums) < 2:
-        return None, None, None
+# 계산 처리
+if st.button("🔍 경우의 수 계산하기"):
+    result = None
+    case_type = ""
+    expression = ""
 
-    n, r = nums[0], nums[1]
+    try:
+        if duplication == "불가능" and order == "고려하지 않음":
+            result = combination(n, r)
+            case_type = "조합"
+            expression = f"{n}C{r}"
 
-    # 조합
-    if "순서 없이" in text or "조합" in text or "뽑는" in text:
-        if "중복" in text or "같은 사람" in text:
-            return "중복조합", f"{n}Hr{r}", repetition_combination(n, r)
-        else:
-            return "조합", f"{n}C{r}", combination(n, r)
+        elif duplication == "불가능" and order == "고려함":
+            result = permutation(n, r)
+            case_type = "순열"
+            expression = f"{n}P{r}"
 
-    # 순열
-    if "순서 있게" in text or "줄을 세우는" in text or "배열" in text or "순열" in text:
-        return "순열", f"{n}P{r}", permutation(n, r)
+        elif duplication == "가능" and order == "고려하지 않음":
+            result = repetition_combination(n, r)
+            case_type = "중복조합"
+            expression = f"{n}Hr{r}"
 
-    return None, None, None
+        elif duplication == "가능" and order == "고려함":
+            result = n ** r
+            case_type = "중복순열"
+            expression = f"{n}^{r}"
 
-# 📊 결과 처리
-if user_input:
-    case_type, expression, result = parse_case(user_input)
-
-    if case_type:
-        st.markdown("### 🎯 해석 결과")
+        # 출력
+        st.markdown("### 🎯 계산 결과")
         st.info(f"📘 유형: `{case_type}`\n\n🧮 수식: `{expression}`")
         st.success(f"✅ 결과: **{result:,}** 가지 경우")
         st.balloons()
-    else:
-        st.warning("❗ 문장을 제대로 이해하지 못했어요. 예: '7명 중 3명을 순서 없이 뽑는 경우의 수' 처럼 입력해 주세요.")
+
+    except Exception as e:
+        st.error("❌ 유효한 입력이 아닙니다. n ≥ r 조건을 확인하세요.")
