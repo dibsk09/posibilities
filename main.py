@@ -1,58 +1,104 @@
-import streamlit as st
-import math
+words_by_level = {
+    1: [
+        'apple', 'banana', 'book', 'cat', 'dog', 'egg', 'fish', 'girl', 'hat', 'ice',
+        'juice', 'key', 'lion', 'man', 'nose', 'orange', 'pen', 'queen', 'rain', 'sun',
+        'tree', 'umbrella', 'van', 'water', 'x-ray', 'yogurt', 'zoo', 'car', 'desk', 'ear',
+        'frog', 'goat', 'home', 'ink', 'jam', 'kite', 'leaf', 'milk', 'net', 'owl'
+    ],
+    2: [
+        'airport', 'basket', 'candle', 'doctor', 'elephant', 'father', 'garden', 'hammer',
+        'island', 'jungle', 'kitchen', 'letter', 'mirror', 'needle', 'office', 'pencil',
+        'quiet', 'rabbit', 'school', 'ticket', 'uncle', 'village', 'window', 'xylophone',
+        'yawn', 'zebra', 'blanket', 'cloud', 'dream', 'engine', 'floor', 'glove', 'horse',
+        'idea', 'jacket', 'kangaroo', 'ladder', 'movie', 'nurse', 'ocean', 'pocket'
+    ],
+    3: [
+        'abandon', 'benefit', 'capture', 'declare', 'efficient', 'fascinate', 'generate',
+        'hesitate', 'identity', 'justice', 'kinetic', 'landscape', 'mechanism', 'narrate',
+        'obstacle', 'paradox', 'quantity', 'reliable', 'subtle', 'tangible', 'ultimate',
+        'valid', 'wealth', 'xenophobia', 'yield', 'zeal', 'agile', 'brisk', 'crucial',
+        'diminish', 'endure', 'fluctuate', 'gratify', 'hinder', 'implement', 'jeopardy',
+        'keen', 'lucrative', 'meticulous', 'notion'
+    ],
+    4: [
+        'allegiance', 'belittle', 'contemplate', 'detrimental', 'eloquent', 'futile',
+        'grievance', 'hypothetical', 'intricate', 'juxtapose', 'knack', 'languish',
+        'manipulate', 'negligent', 'obsolete', 'persevere', 'quaint', 'relinquish',
+        'scrutinize', 'tenacious', 'unprecedented', 'vulnerable', 'withstand', 'xenial',
+        'yearn', 'zealous', 'ascertain', 'bolster', 'converge', 'deviate', 'elusive',
+        'frivolous', 'galvanize', 'haphazard', 'impede', 'jubilant', 'kinship', 'lament',
+        'morbid', 'nostalgia'
+    ],
+    5: [
+        'antediluvian', 'bifurcate', 'circumlocution', 'diaphanous', 'ephemeral',
+        'farrago', 'grandiloquent', 'heuristic', 'idiosyncrasy', 'juxtaposition',
+        'kaleidoscope', 'limerence', 'magnanimous', 'nefarious', 'obfuscate',
+        'perspicacious', 'quixotic', 'recalcitrant', 'sesquipedalian', 'tintinnabulation',
+        'ubiquitous', 'verisimilitude', 'wanderlust', 'xenoglossy', 'yonder', 'zephyr',
+        'abscond', 'blandishment', 'cacophony', 'denouement', 'effervescent', 'flummox',
+        'garrulous', 'harangue', 'insidious', 'jejune', 'kowtow', 'lachrymose', 'maelstrom',
+        'nadir', 'obsequious'
+    ]
+}
 
-# 계산 함수 정의
-def factorial(n):
-    return math.factorial(n)
+questions_per_level = {
+    1: 10,
+    2: 7,
+    3: 5,
+    4: 2,
+    5: 1
+}
 
-def nCr(n, r):
-    if r > n:
-        return 0
-    return factorial(n) // (factorial(r) * factorial(n - r))
+# 초기화
+if 'level' not in st.session_state:
+    st.session_state.level = 1
+    st.session_state.q_index = 0
+    st.session_state.correct = 0
+    st.session_state.selected_words = random.sample(words_by_level[1], questions_per_level[1])
 
-def nPr(n, r):
-    if r > n:
-        return 0
-    return factorial(n) // factorial(n - r)
+level = st.session_state.level
+q_index = st.session_state.q_index
+selected_words = st.session_state.selected_words
+total_questions = questions_per_level[level]
+current_word = selected_words[q_index]
 
-def nHr(n, r):
-    return nCr(n + r - 1, r)
+# 뜻 생성기 (가짜 데이터)
+def generate_meanings(correct_word):
+    meanings = {
+        correct_word: f"{correct_word}의 뜻",
+        "fake1": "잘못된 뜻 A",
+        "fake2": "잘못된 뜻 B",
+        "fake3": "잘못된 뜻 C"
+    }
+    options = list(meanings.values())
+    random.shuffle(options)
+    return options, meanings[correct_word]
 
-def repeat_permutation(n, r):
-    return n ** r
+# UI
+st.title("📘 영어 단어 시험")
+st.subheader(f"{level}단계 - 문제 {q_index + 1} / {total_questions}")
+options, correct_answer = generate_meanings(current_word)
+user_answer = st.radio(f"단어: **{current_word}**", options)
 
-# Streamlit 앱 시작
-st.title("🎲 경우의 수 계산기")
+if st.button("제출"):
+    if user_answer == correct_answer:
+        st.session_state.correct += 1
 
-st.markdown("**아래 질문에 답하고, n과 r을 입력하세요.**")
+    st.session_state.q_index += 1
 
-col1, col2 = st.columns(2)
+    if st.session_state.q_index >= total_questions:
+        st.success(f"{level}단계 완료! 맞은 개수: {st.session_state.correct} / {total_questions}")
 
-with col1:
-    order = st.selectbox("순서를 고려하는가?", options=["O", "X"])
-with col2:
-    repeat = st.selectbox("중복을 허용하는가?", options=["O", "X"])
+        if level == 5:
+            st.balloons()
+            st.success("🎉 영어짱!!! 🎉")
+        else:
+            st.session_state.level += 1
+            st.session_state.q_index = 0
+            st.session_state.correct = 0
+            st.session_state.selected_words = random.sample(
+                words_by_level[st.session_state.level],
+                questions_per_level[st.session_state.level]
+            )
 
-n = st.number_input("전체 항목 개수 n", min_value=0, step=1)
-r = st.number_input("선택할 항목 개수 r", min_value=0, step=1)
-
-if st.button("계산하기"):
-    if order == "X" and repeat == "X":
-        result = nCr(n, r)
-        formula = "조합 (nCr)"
-    elif order == "O" and repeat == "X":
-        result = nPr(n, r)
-        formula = "순열 (nPr)"
-    elif order == "X" and repeat == "O":
-        result = nHr(n, r)
-        formula = "중복 조합 (nHr)"
-    elif order == "O" and repeat == "O":
-        result = repeat_permutation(n, r)
-        formula = "중복 순열 (n^r)"
-    else:
-        result = None
-        formula = "알 수 없음"
-
-    st.markdown(f"### ✅ 선택된 계산식: **{formula}**")
-    st.markdown(f"**n = {n}, r = {r}**")
-    st.success(f"🔢 결과: {result}")
+    st.experimental_rerun()
