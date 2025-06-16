@@ -1,3 +1,7 @@
+import streamlit as st
+import random
+
+# 단계별 단어 리스트 (각 40개 예시)
 words_by_level = {
     1: [
         'apple', 'banana', 'book', 'cat', 'dog', 'egg', 'fish', 'girl', 'hat', 'ice',
